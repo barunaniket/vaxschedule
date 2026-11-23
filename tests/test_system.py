@@ -13,6 +13,41 @@ def test_home_page(client):
     assert "Vaccination booking portal" in page(client.get("/"))
 
 
+# --- Module 1: registration -------------------------------------------------
+REGISTER = {"name": "Asha Rao", "dob": "1990-05-17",
+            "id_number": "ABCD1234", "mobile": "9876543210"}
+
+
+def test_st01_register_opens_dashboard(client):
+    html = page(client.post("/register", data=REGISTER,
+                            follow_redirects=True))
+    assert "Registration successful" in html
+    assert "Welcome, Asha Rao" in html
+
+
+def test_st02_invalid_mobile(client):
+    html = page(client.post("/register", data={**REGISTER, "mobile": "123"},
+                            follow_redirects=True))
+    assert "Mobile number must be 10 digits" in html
+
+
+def test_st03_logout_and_login(client):
+    client.post("/register", data=REGISTER)
+    html = page(client.get("/logout", follow_redirects=True))
+    assert "logged out" in html
+    assert "Please log in first" in page(
+        client.get("/citizen", follow_redirects=True))
+    html = page(client.post("/login", data={
+        "id_number": "abcd1234", "mobile": "9876543210"},
+        follow_redirects=True))
+    assert "Welcome, Asha Rao" in html
+    client.get("/logout")
+    html = page(client.post("/login", data={
+        "id_number": "ABCD1234", "mobile": "9000000000"},
+        follow_redirects=True))
+    assert "No citizen" in html
+
+
 # --- Module 2: booking ------------------------------------------------------
 def test_dashboard_shows_slots_and_books(client, app_conn):
     _, slot = setup_slots(app_conn)

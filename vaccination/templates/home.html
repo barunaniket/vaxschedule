@@ -2,4 +2,26 @@
 {% block content %}
 <h1>Vaccination booking portal</h1>
 <p class="muted">Register once, book each dose at the right time, and get a signed certificate.</p>
+<div class="grid">
+  <form class="card" method="post" action="/register">
+    <h2>Register</h2>
+    <label for="r-name">Full name</label>
+    <input id="r-name" name="name" required>
+    <label for="r-dob">Date of birth</label>
+    <input id="r-dob" name="dob" type="date" required>
+    <label for="r-id">ID number</label>
+    <input id="r-id" name="id_number" required>
+    <label for="r-mobile">Mobile</label>
+    <input id="r-mobile" name="mobile" inputmode="numeric" required>
+    <button type="submit">Register</button>
+  </form>
+  <form class="card" method="post" action="/login">
+    <h2>Log in</h2>
+    <label for="l-id">ID number</label>
+    <input id="l-id" name="id_number" required>
+    <label for="l-mobile">Mobile</label>
+    <input id="l-mobile" name="mobile" inputmode="numeric" required>
+    <button type="submit">Log in</button>
+  </form>
+</div>
 {% endblock %}

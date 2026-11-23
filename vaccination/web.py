@@ -10,6 +10,7 @@ from . import scheduling
 from .rules import parse_date
 from .rules import (VACCINES, NotFoundError, VaccinationError,
                     next_dose_date)
+from . import registration
 
 bp = Blueprint("web", __name__)
 
@@ -41,6 +42,52 @@ def require_role(role):
 def home():
     """Landing page."""
     return render_template("home.html")
+
+
+# --- Module 1: registration (FR-001) ----------------------------------------
+def _start_citizen_session(row):
+    session.clear()
+    session["role"] = "citizen"
+    session["citizen_id"] = row["id"]
+    session["name"] = row["name"]
+
+
+@bp.route("/register", methods=["POST"])
+def register():
+    """Create an account and log the citizen in."""
+    form = request.form
+    try:
+        citizen_id = registration.register_citizen(
+            _conn(), form.get("name"), form.get("dob"),
+            form.get("id_number"), form.get("mobile"), today=_today())
+    except VaccinationError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("web.home"))
+    _start_citizen_session(registration.get_citizen(_conn(), citizen_id))
+    flash("Registration successful.", "success")
+    return redirect(url_for("web.citizen"))
+
+
+@bp.route("/login", methods=["POST"])
+def login():
+    """Log in with ID number and mobile."""
+    try:
+        row = registration.find_by_login(
+            _conn(), request.form.get("id_number"),
+            request.form.get("mobile"))
+    except VaccinationError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("web.home"))
+    _start_citizen_session(row)
+    return redirect(url_for("web.citizen"))
+
+
+@bp.route("/logout")
+def logout():
+    """End the session."""
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("web.home"))
 
 
 # --- Module 2: booking (FR-002, FR-003) -------------------------------------

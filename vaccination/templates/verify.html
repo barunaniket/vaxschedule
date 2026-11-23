@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Verify a certificate</h1>
+<form class="card" method="post" action="/verify">
+  <label for="token">Certificate token</label>
+  <input id="token" name="token" value="{{ token }}" required>
+  <button type="submit">Verify</button>
+</form>
+{% if checked %}
+  {% if result %}
+  <div class="flash success">
+    <strong>Genuine certificate.</strong>
+    {{ result.name }} (ID ending {{ result.id_last4 }}) · {{ result.vaccine }} ·
+    {{ result.doses | length }} dose(s) · {{ result.status }}
+  </div>
+  {% else %}
+  <div class="flash error"><strong>Invalid or tampered certificate.</strong></div>
+  {% endif %}
+{% endif %}
+{% endblock %}

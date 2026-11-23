@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Vaccination certificate</h1>
+<div class="card grid">
+  <div class="qr">{{ svg | safe }}</div>
+  <div>
+    <p><strong>{{ data.name }}</strong><br><span class="muted">ID ending {{ data.id_last4 }}</span></p>
+    <p>Vaccine: {{ data.vaccine }}<br>Doses: {{ data.doses | length }}</p>
+    <p><span class="badge {{ data.status.split()[0] }}">{{ data.status }}</span></p>
+    <p class="muted">Issued {{ issued_at }}</p>
+  </div>
+</div>
+<div class="card">
+  <h2>Certificate token</h2>
+  <p class="token">{{ token }}</p>
+  <p class="muted">Anyone can check this token on the <a href="/verify">verify page</a>.</p>
+</div>
+{% endblock %}

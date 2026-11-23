@@ -1,0 +1,9 @@
+__pycache__/
+*.db
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+venv/
+.venv/
+docs/reports/coverage_html/

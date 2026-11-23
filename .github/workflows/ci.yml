@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Lint (flake8)
+        run: flake8 vaccination tests run.py
+      - name: Static analysis (pylint)
+        run: pylint vaccination run.py --disable=C0114 --fail-under=9.5
+      - name: Security scan (bandit)
+        run: bandit -r vaccination run.py
+      - name: Tests with branch coverage
+        run: pytest --cov=vaccination --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml

@@ -1,0 +1,4 @@
+[MAIN]
+# register_citizen's signature is fixed by the Technical Design (6 args).
+max-args=6
+max-positional-arguments=6

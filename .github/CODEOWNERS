@@ -1,0 +1,12 @@
+# Module owners are auto-requested as reviewers.
+/vaccination/registration.py    @bhardwajkishan
+/tests/test_registration.py     @bhardwajkishan
+/vaccination/scheduling.py      @barunaniket
+/vaccination/rules.py           @barunaniket
+/tests/test_scheduling.py       @barunaniket
+/tests/test_rules.py            @barunaniket
+/vaccination/records.py         @Ekaaaasss02
+/tests/test_records.py          @Ekaaaasss02
+/vaccination/certificates.py    @bhardwajkishan
+/tests/test_certificates.py     @bhardwajkishan
+/docs/                          @barunaniket @bhardwajkishan @Ekaaaasss02

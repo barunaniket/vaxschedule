@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Welcome, {{ name }}</h1>
+<div class="card">
+  <p>Status: <span class="badge {{ status.split()[0] }}">{{ status }}</span></p>
+  {% if doses %}
+  <table>
+    <tr><th>Dose</th><th>Vaccine</th><th>Date</th><th>Batch</th></tr>
+    {% for d in doses %}
+    <tr><td>{{ d.dose_number }}</td><td>{{ d.vaccine }}</td><td>{{ d.date_given }}</td><td>{{ d.batch }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">No doses recorded yet.</p>{% endif %}
+  {% if next_due %}<p>Next dose from <strong>{{ next_due.isoformat() }}</strong>.</p>{% endif %}
+</div>
+
+{% if booking %}
+<div class="card">
+  <h2>Your booking</h2>
+  <p>Dose {{ booking.dose_number }} · {{ booking.vaccine }} · {{ booking.date }} · {{ booking.centre }}</p>
+  <form method="post" action="/cancel/{{ booking.id }}">
+    <button class="secondary" type="submit">Cancel booking</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Free slots</h2>
+  <form class="inline" method="get" action="/citizen">
+    <div><label for="pin">PIN code</label>
+      <input id="pin" name="pincode" value="{{ pincode }}" placeholder="e.g. 560085"></div>
+    <button type="submit">Search</button>
+  </form>
+  {% if slots %}
+  <table>
+    <tr><th>Date</th><th>Centre</th><th>PIN</th><th>Vaccine</th><th>Free</th><th></th></tr>
+    {% for s in slots %}
+    <tr>
+      <td>{{ s.date }}</td><td>{{ s.centre }}</td><td>{{ s.pincode }}</td>
+      <td>{{ s.vaccine }}</td><td>{{ s.free }}</td>
+      <td><form method="post" action="/book/{{ s.id }}"><button type="submit">Book</button></form></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">No free slots found.</p>{% endif %}
+</div>
+{% endblock %}

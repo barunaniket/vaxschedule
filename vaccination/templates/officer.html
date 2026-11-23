@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Officer console</h1>
+<div class="card">
+  <form class="inline" method="get" action="/officer">
+    <div><label for="day">Day</label><input id="day" name="day" type="date" value="{{ day }}"></div>
+    <button type="submit">Show</button>
+  </form>
+  {% if bookings %}
+  <table>
+    <tr><th>#</th><th>Citizen</th><th>ID</th><th>Centre</th><th>Vaccine</th><th>Dose</th><th>Status / batch</th></tr>
+    {% for b in bookings %}
+    <tr>
+      <td>{{ b.id }}</td><td>{{ b.name }}</td><td>{{ b.id_number }}</td><td>{{ b.centre }}</td>
+      <td>{{ b.vaccine }}</td><td>{{ b.dose_number }}</td>
+      <td>{% if b.status == 'BOOKED' %}
+        <form method="post" action="/officer/record/{{ b.id }}">
+          <input type="hidden" name="day" value="{{ day }}">
+          <input name="batch" placeholder="Batch no." required aria-label="Batch number">
+          <button type="submit">Save</button>
+        </form>
+      {% else %}{{ b.status }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">No bookings on {{ day }}.</p>{% endif %}
+</div>
+
+<form class="card" method="post" action="/officer/slot">
+  <h2>Publish slot</h2>
+  <div class="inline">
+    <div><label for="centre">Centre</label>
+      <select id="centre" name="centre_id">
+        {% for c in centres %}<option value="{{ c.id }}">{{ c.name }} ({{ c.pincode }})</option>{% endfor %}
+      </select></div>
+    <div><label for="sdate">Date</label><input id="sdate" name="date" type="date" value="{{ day }}" required></div>
+    <div><label for="vac">Vaccine</label>
+      <select id="vac" name="vaccine">{% for v in vaccines %}<option>{{ v }}</option>{% endfor %}</select></div>
+    <div><label for="cap">Capacity</label><input id="cap" name="capacity" type="number" min="1" value="50" required></div>
+  </div>
+  <button type="submit">Publish slot</button>
+</form>
+{% endblock %}

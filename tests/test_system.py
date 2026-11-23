@@ -1,4 +1,7 @@
 """System validation tests (ST-01 to ST-15) through the Flask test client."""
+import base64
+import json
+
 from vaccination import scheduling
 
 from .conftest import (TODAY_DATE, add_citizen, add_dose, login_as_citizen,
@@ -187,3 +190,56 @@ def test_st13_record_missing_booking(client):
     html = page(client.post("/officer/record/42", data={"batch": "B-1"},
                             follow_redirects=True))
     assert "Booking 42 not found" in html
+
+
+# --- Module 4: certificates -------------------------------------------------
+def test_st07_full_journey(client, app_conn):
+    setup_slots(app_conn)
+    client.post("/register", data={
+        "name": "Asha Rao", "dob": "1990-05-17", "id_number": "ABCD1234",
+        "mobile": "9876543210"})
+    slot = scheduling.search_slots(app_conn)[0]["id"]
+    client.post(f"/book/{slot}")
+    booking = scheduling.active_booking(app_conn, 1)["id"]
+    client.get("/logout")
+
+    client.post("/officer/login", data={"code": "officer-test"})
+    client.post(f"/officer/record/{booking}", data={"batch": "B-77"})
+    client.get("/logout")
+
+    client.post("/login", data={"id_number": "ABCD1234",
+                                "mobile": "9876543210"})
+    html = page(client.get("/certificate"))
+    assert "<svg" in html
+    assert "PARTIALLY VACCINATED" in html
+    assert "ABCD1234" not in html  # only the last 4 characters
+    token = html.split('<p class="token">')[1].split("</p>")[0].strip()
+
+    html = page(client.post("/verify", data={"token": token}))
+    assert "Genuine certificate" in html
+
+    body, signature = token.split(".")
+    data = json.loads(base64.urlsafe_b64decode(body + "=="))
+    data["status"] = "FULLY VACCINATED"
+    forged = base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
+    html = page(client.post("/verify", data={
+        "token": forged.rstrip("=") + "." + signature}))
+    assert "Invalid or tampered" in html
+
+
+def test_certificate_needs_a_dose(client, app_conn):
+    login_as_citizen(client, add_citizen(app_conn))
+    html = page(client.get("/certificate", follow_redirects=True))
+    assert "No certificate has been issued yet" in html
+
+
+def test_certificate_needs_login(client):
+    html = page(client.get("/certificate", follow_redirects=True))
+    assert "Please log in first" in html
+
+
+def test_st15_verify_page_is_empty(client):
+    html = page(client.get("/verify"))
+    assert "Certificate token" in html
+    assert "Genuine" not in html
+    assert "Invalid" not in html

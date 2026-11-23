@@ -12,6 +12,7 @@
   </table>
   {% else %}<p class="muted">No doses recorded yet.</p>{% endif %}
   {% if next_due %}<p>Next dose from <strong>{{ next_due.isoformat() }}</strong>.</p>{% endif %}
+  {% if doses %}<p><a href="/certificate">View certificate</a></p>{% endif %}
 </div>
 
 {% if booking %}

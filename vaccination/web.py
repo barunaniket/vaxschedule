@@ -13,6 +13,7 @@ from .rules import (VACCINES, NotFoundError, VaccinationError,
                     next_dose_date)
 from . import registration
 from . import records
+from . import certificates
 
 bp = Blueprint("web", __name__)
 
@@ -190,6 +191,9 @@ def officer_record(booking_id):
     try:
         dose_id = records.record_dose(
             conn, booking_id, request.form.get("batch"))
+        certificates.issue_certificate(
+            conn, current_app.config["CERT_SECRET"],
+            scheduling.get_booking(conn, booking_id)["citizen_id"])
         flash(f"Dose recorded for booking #{booking_id} "
               f"(dose record #{dose_id}).", "success")
     except VaccinationError as exc:
@@ -209,3 +213,33 @@ def officer_slot():
     except VaccinationError as exc:
         flash(str(exc), "error")
     return redirect(url_for("web.officer", day=form.get("date") or None))
+
+
+# --- Module 4: certificates (FR-005) ----------------------------------------
+@bp.route("/certificate")
+@require_role("citizen")
+def certificate():
+    """Show the citizen's latest signed certificate as a QR code."""
+    try:
+        cert = certificates.latest_certificate(
+            _conn(), session["citizen_id"])
+    except VaccinationError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("web.citizen"))
+    token = certificates.qr_token(cert)
+    return render_template(
+        "certificate.html", token=token, svg=certificates.qr_svg(token),
+        data=certificates.verify_token(
+            current_app.config["CERT_SECRET"], token),
+        issued_at=cert["issued_at"])
+
+
+@bp.route("/verify", methods=["GET", "POST"])
+def verify():
+    """Public verification page."""
+    token = request.values.get("token", "").strip()
+    checked = bool(token)
+    result = certificates.verify_token(
+        current_app.config["CERT_SECRET"], token) if checked else None
+    return render_template(
+        "verify.html", token=token, checked=checked, result=result)

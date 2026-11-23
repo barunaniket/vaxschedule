@@ -4,6 +4,7 @@ from datetime import date
 import pytest
 
 from vaccination import create_app, db
+from vaccination import scheduling
 
 TODAY = "2026-11-02"
 TODAY_DATE = date(2026, 11, 2)
@@ -33,6 +34,20 @@ def conn():
     connection = db.connect(":memory:")
     yield connection
     connection.close()
+
+
+@pytest.fixture
+def centre(conn):
+    return scheduling.add_centre(
+        conn, "PHC Banashankari", "Bengaluru Urban", "560085")
+
+
+def setup_slots(conn):
+    """One centre (PIN 560085) with a Covaxin slot on TODAY."""
+    centre_id = scheduling.add_centre(
+        conn, "PHC Banashankari", "Bengaluru Urban", "560085")
+    return centre_id, scheduling.add_slot(
+        conn, centre_id, TODAY, "Covaxin", 10)
 
 
 @pytest.fixture
